@@ -19,6 +19,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {fetchAllAction} from '../store/actions';
 import {fetchAll, fetchByName, fetchByRegion} from '../apis';
 import Backfill from '../components/Backfill';
+import {Store} from '../store/configureStore';
 
 const styles = StyleSheet.create({
   container: {
@@ -43,50 +44,46 @@ const styles = StyleSheet.create({
   },
 });
 
-const Home = ({navigation}) => {
+const Home = ({navigation}: {navigation: any}) => {
   const [value, setValue] = useState('');
   const [region, setRegion] = useState('');
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [result, setResult] = useState([]);
+  const [result, setResult] = useState<CountryDetails[]>([]);
   const dispatch = useDispatch();
 
-  const mapCountries = useSelector(state => state?.countries?.mapCountries);
+  const mapCountries = useSelector((state: Store) => state?.countries);
 
   const debouncedValue = useDebounce(value, 500);
 
-  const fetchAllCountries = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const response = await fetchAll();
-      if (response.length > 0) {
+  useEffect(() => {
+    const fetchAllCountries = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const response = await fetchAll();
         dispatch(fetchAllAction(response));
         setResult(response);
+      } catch (err: any) {
+        setError(err.message);
       }
-    } catch (err) {
-      setError(err.message);
-    }
-    setLoading(false);
-  };
-
-  useEffect(() => {
+      setLoading(false);
+    };
     fetchAllCountries();
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     const fetchCountriesByRegion = async (region: string) => {
       setLoading(true);
       setError('');
-      let response;
       try {
-        response = await fetchByRegion(region);
-      } catch (err) {
+        const response = await fetchByRegion(region);
+        setResult(response);
+      } catch (err: any) {
         setError(err.message);
       }
       setLoading(false);
-      setResult(response);
     };
 
     if (region) {
@@ -98,14 +95,13 @@ const Home = ({navigation}) => {
     const fetchCountriesByName = async (name: string) => {
       setLoading(true);
       setError('');
-      let response;
       try {
-        response = await fetchByName(name);
-      } catch (err) {
+        const response = await fetchByName(name);
+        setResult(response);
+      } catch (err: any) {
         setError(err.message);
       }
       setLoading(false);
-      setResult(response);
     };
 
     if (debouncedValue.trim()) {
@@ -116,11 +112,11 @@ const Home = ({navigation}) => {
   const renderItem = ({item, index}: {item: CountryDetails; index: number}) => {
     return (
       <TouchableOpacity
-        key={`${item.cca3}${index}`}
+        key={`${item.cca2}${index}`}
         activeOpacity={StyleVars.TOUCH_OPACITY}
         onPress={() => {
           navigation.navigate('Country-Details', {
-            name: item.name.common,
+            code: item.cca2,
           });
         }}>
         <CountryDetail key={`${item.cca3}${index}`} country={item} />

@@ -8,15 +8,17 @@ import {
   FlatList,
 } from 'react-native';
 import {Shadow} from 'react-native-shadow-2';
-import {fetchByName} from '../apis';
+import {fetchByCode} from '../apis';
 import {useDispatch, useSelector} from 'react-redux';
 import {StyleVars} from '../styles';
 import LeftArrow from '../assets/icons/LeftArrow';
 import colors from '../styles/colors';
 import FastImage from 'react-native-fast-image';
 import {fetchByNameAction} from '../store/actions';
-import {alpha3ToCountry} from './../constants';
+import {alphaCca3Map} from './../constants';
 import Backfill from '../components/Backfill';
+import {CountryDetails} from '../global';
+import {Store} from '../store/configureStore';
 
 const WIDTH = StyleVars.WINDOW_WIDTH - StyleVars.PRIMARY_SPACING * 2;
 const HEIGHT = WIDTH / 2;
@@ -109,60 +111,38 @@ const styles = StyleSheet.create({
   },
 });
 
-const CountryDetails = ({route, navigation}) => {
-  const {name} = route.params;
+const CountryDetail = ({route, navigation}: {route: any; navigation: any}) => {
+  const {code} = route.params;
 
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [result, setResult] = useState();
+  const [result, setResult] = useState<undefined | CountryDetails>();
 
   const dispatch = useDispatch();
 
-  const mapCountries = useSelector(state => state?.countries?.mapCountries);
+  const mapCountries = useSelector((state: Store) => state?.countries);
 
   useEffect(() => {
-    const fetchCountriesByName = async (
-      countryName: string,
-      queryParams: Record<string, any>,
-    ) => {
-      setLoading(true);
+    const fetchCountriesByCode = async (codes: string[]) => {
+      // setLoading(true);
       setError('');
-      let response;
       try {
-        response = await fetchByName(countryName, queryParams);
+        const response = await fetchByCode(codes);
         dispatch(fetchByNameAction(response[0]));
-      } catch (err) {
+        setResult(response[0]);
+      } catch (err: any) {
         setError(err?.message);
       }
       setLoading(false);
-      setResult(response[0]);
     };
-    if (name && !mapCountries[name].isComplete) {
-      fetchCountriesByName(name, {
-        fullText: true,
-        fields: [
-          'name',
-          'cca2',
-          'cca3',
-          'independent',
-          'currencies',
-          'capital',
-          'region',
-          'subregion',
-          'languages',
-          'latlng',
-          'borders',
-          'area',
-          'population',
-          'timezones',
-          'continents',
-          'flags',
-        ],
-      });
+    if (code && !mapCountries[code]?.isComplete) {
+      fetchCountriesByCode([code]);
     } else {
-      setResult(mapCountries[name]);
+      setResult(mapCountries[code]);
+      setLoading(false);
     }
-  }, [name, mapCountries, dispatch]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code, dispatch]);
 
   const details =
     useMemo(() => {
@@ -170,7 +150,7 @@ const CountryDetails = ({route, navigation}) => {
         const currencies = result?.currencies || [];
         let finalCurrencies = Object.keys(currencies);
         finalCurrencies = finalCurrencies.map(
-          currency => currencies[currency].name,
+          currency => (currencies as Record<string, any>)[currency].name,
         );
 
         return [
@@ -180,7 +160,7 @@ const CountryDetails = ({route, navigation}) => {
           },
           {
             metric: 'Population',
-            value: result?.population?.toLocaleString('en-US'),
+            value: result?.population?.toLocaleString(),
           },
           {
             metric: 'Region',
@@ -206,8 +186,9 @@ const CountryDetails = ({route, navigation}) => {
       }
     }, [result]) || [];
 
-  const renderItem = ({item, index}: {item: CountryDetails; index: number}) => {
-    const countryName = alpha3ToCountry[item];
+  const renderItem = ({item, index}: {item: string; index: number}) => {
+    const countryName = (alphaCca3Map as Record<string, any>)[item].country;
+    const cca2 = (alphaCca3Map as Record<string, any>)[item].cca2;
     return (
       <Shadow
         key={`${item}${index}`}
@@ -217,7 +198,7 @@ const CountryDetails = ({route, navigation}) => {
         <TouchableOpacity
           onPress={() => {
             navigation.navigate('Country-Details', {
-              name: countryName,
+              code: cca2,
             });
           }}>
           <View style={styles.borderCountry}>
@@ -256,45 +237,43 @@ const CountryDetails = ({route, navigation}) => {
           </View>
         </TouchableOpacity>
       </Shadow>
-      {result && (
+      <View style={styles.detailsContainer}>
+        <FastImage
+          style={styles.image}
+          source={{
+            uri: result?.flags?.png,
+            headers: {Authorization: 'someAuthToken'},
+            priority: FastImage.priority.normal,
+          }}
+          resizeMode={FastImage.resizeMode.cover}
+        />
         <View style={styles.detailsContainer}>
-          <FastImage
-            style={styles.image}
-            source={{
-              uri: result.flags?.png,
-              headers: {Authorization: 'someAuthToken'},
-              priority: FastImage.priority.normal,
-            }}
-            resizeMode={FastImage.resizeMode.cover}
-          />
-          <View style={styles.detailsContainer}>
-            <Text style={styles.name}>{result?.name?.common}</Text>
+          <Text style={styles.name}>{result?.name?.common}</Text>
 
-            {details.map(entry => (
-              <View key={entry.metric} style={styles.details}>
-                <Text style={styles.metric}>{entry.metric}: </Text>
-                <Text style={styles.value}>{entry.value}</Text>
+          {details.map(entry => (
+            <View key={entry.metric} style={styles.details}>
+              <Text style={styles.metric}>{entry.metric}: </Text>
+              <Text style={styles.value}>{entry.value}</Text>
+            </View>
+          ))}
+          <Text style={styles.metric}>Border Countries: </Text>
+          <FlatList
+            contentContainerStyle={styles.container}
+            data={result?.borders || []}
+            renderItem={renderItem}
+            keyExtractor={item => item}
+            showsHorizontalScrollIndicator={true}
+            horizontal
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.noRecords}>No Countries Around</Text>
               </View>
-            ))}
-            <Text style={styles.metric}>Border Countries: </Text>
-            <FlatList
-              contentContainerStyle={styles.container}
-              data={result?.borders || []}
-              renderItem={renderItem}
-              keyExtractor={item => item}
-              showsHorizontalScrollIndicator={true}
-              horizontal
-              ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.noRecords}>No Countries Around</Text>
-                </View>
-              }
-            />
-          </View>
+            }
+          />
         </View>
-      )}
+      </View>
     </ScrollView>
   );
 };
 
-export default CountryDetails;
+export default CountryDetail;

@@ -4,6 +4,7 @@ import CallApi from '../utils/callApi';
 const ALL = 'all';
 const NAME = 'name';
 const REGION = 'region';
+const ALPHA = 'alpha';
 
 const fetchAll = () => {
   return CallApi({
@@ -60,4 +61,32 @@ const fetchByRegion = (region: string) => {
   });
 };
 
-export {fetchAll, fetchByName, fetchByRegion};
+const fetchByCode = (codes: string[]) => {
+  return CallApi({
+    url: `${Config.BASE_URL}${ALPHA}`,
+    method: 'GET',
+    queryParams: {
+      codes,
+      fields: [
+        'name',
+        'cca2',
+        'cca3',
+        'independent',
+        'currencies',
+        'capital',
+        'region',
+        'subregion',
+        'languages',
+        'latlng',
+        'borders',
+        'area',
+        'population',
+        'timezones',
+        'continents',
+        'flags',
+      ],
+    },
+  });
+};
+
+export {fetchAll, fetchByName, fetchByRegion, fetchByCode};
