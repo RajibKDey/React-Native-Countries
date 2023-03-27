@@ -47,7 +47,6 @@ const styles = StyleSheet.create({
 const Home = ({navigation}: {navigation: any}) => {
   const [value, setValue] = useState('');
   const [region, setRegion] = useState('');
-  const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<CountryDetails[]>([]);
@@ -140,7 +139,6 @@ const Home = ({navigation}: {navigation: any}) => {
     <TouchableWithoutFeedback
       onPress={() => {
         Keyboard.dismiss();
-        setOpen(false);
       }}>
       <FlatList
         contentContainerStyle={styles.container}
@@ -170,8 +168,6 @@ const Home = ({navigation}: {navigation: any}) => {
               }}
               placeholder={'Filter by Region...'}
               // enable closing of dropdown on clicking outside
-              open={open}
-              setOpen={setOpen}
             />
           </View>
         }

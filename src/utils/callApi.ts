@@ -29,7 +29,9 @@ const CallApi = ({
     headers: new Headers({'content-type': 'application/json', ...headers}), // by default setting the content-type to be json type
     body: body ? JSON.stringify(body) : null,
   };
-  if (useCredentials) options.credentials = 'include';
+  if (useCredentials) {
+    options.credentials = 'include';
+  }
 
   let newUrl = url;
 

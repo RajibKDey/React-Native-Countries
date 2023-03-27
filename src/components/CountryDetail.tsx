@@ -62,7 +62,7 @@ const CountryDetail: FC<CountryDetailProps> = ({country}) => {
   const details = [
     {
       metric: 'Population',
-      value: country.population.toLocaleString('en-US'),
+      value: country.population.toLocaleString(),
     },
     {
       metric: 'Region',
@@ -83,7 +83,6 @@ const CountryDetail: FC<CountryDetailProps> = ({country}) => {
           style={styles.image}
           source={{
             uri: country.flags.png,
-            headers: {Authorization: 'someAuthToken'},
             priority: FastImage.priority.normal,
           }}
           resizeMode={FastImage.resizeMode.cover}

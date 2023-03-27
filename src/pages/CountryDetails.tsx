@@ -7,6 +7,7 @@ import {
   ScrollView,
   FlatList,
 } from 'react-native';
+import _ from 'lodash';
 import {Shadow} from 'react-native-shadow-2';
 import {fetchByCode} from '../apis';
 import {useDispatch, useSelector} from 'react-redux';
@@ -180,14 +181,14 @@ const CountryDetail = ({route, navigation}: {route: any; navigation: any}) => {
           },
           {
             metric: 'Languages',
-            value: Object.values(result?.languages || {}),
+            value: Object.values(result?.languages || {}).join(', '),
           },
         ];
       }
     }, [result]) || [];
 
   const renderItem = ({item, index}: {item: string; index: number}) => {
-    const countryName = (alphaCca3Map as Record<string, any>)[item].country;
+    const countryName = (alphaCca3Map as Record<string, any>)[item].Country;
     const cca2 = (alphaCca3Map as Record<string, any>)[item].cca2;
     return (
       <Shadow
@@ -242,7 +243,6 @@ const CountryDetail = ({route, navigation}: {route: any; navigation: any}) => {
           style={styles.image}
           source={{
             uri: result?.flags?.png,
-            headers: {Authorization: 'someAuthToken'},
             priority: FastImage.priority.normal,
           }}
           resizeMode={FastImage.resizeMode.cover}
@@ -257,19 +257,21 @@ const CountryDetail = ({route, navigation}: {route: any; navigation: any}) => {
             </View>
           ))}
           <Text style={styles.metric}>Border Countries: </Text>
-          <FlatList
-            contentContainerStyle={styles.container}
-            data={result?.borders || []}
-            renderItem={renderItem}
-            keyExtractor={item => item}
-            showsHorizontalScrollIndicator={true}
-            horizontal
-            ListEmptyComponent={
-              <View style={styles.emptyContainer}>
-                <Text style={styles.noRecords}>No Countries Around</Text>
-              </View>
-            }
-          />
+          {result && !_.isUndefined(result.borders) && (
+            <FlatList
+              contentContainerStyle={styles.container}
+              data={result?.borders}
+              renderItem={renderItem}
+              keyExtractor={item => item}
+              showsHorizontalScrollIndicator={true}
+              horizontal
+              ListEmptyComponent={
+                <View style={styles.emptyContainer}>
+                  <Text style={styles.noRecords}>No Countries Around</Text>
+                </View>
+              }
+            />
+          )}
         </View>
       </View>
     </ScrollView>
