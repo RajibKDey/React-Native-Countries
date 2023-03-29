@@ -9,17 +9,14 @@ import {
 } from 'react-native';
 import _ from 'lodash';
 import {Shadow} from 'react-native-shadow-2';
-import {fetchByCode} from '../apis';
-import {useDispatch, useSelector} from 'react-redux';
 import {StyleVars} from '../styles';
 import LeftArrow from '../assets/icons/LeftArrow';
 import colors from '../styles/colors';
 import FastImage from 'react-native-fast-image';
-import {fetchByNameAction} from '../store/actions';
 import {alphaCca3Map} from './../constants';
 import Backfill from '../components/Backfill';
 import {CountryDetails} from '../global';
-import {Store} from '../store/configureStore';
+import useCountry from '../hooks/useCountry';
 
 const WIDTH = StyleVars.WINDOW_WIDTH - StyleVars.PRIMARY_SPACING * 2;
 const HEIGHT = WIDTH / 2;
@@ -115,35 +112,29 @@ const styles = StyleSheet.create({
 const CountryDetail = ({route, navigation}: {route: any; navigation: any}) => {
   const {code} = route.params;
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [result, setResult] = useState<undefined | CountryDetails>();
 
-  const dispatch = useDispatch();
-
-  const mapCountries = useSelector((state: Store) => state?.countries);
+  const {
+    countryMap,
+    result: useCountryResult,
+    loading,
+    error,
+    fetchCountriesByCode,
+  } = useCountry();
 
   useEffect(() => {
-    const fetchCountriesByCode = async (codes: string[]) => {
-      // setLoading(true);
-      setError('');
-      try {
-        const response = await fetchByCode(codes);
-        dispatch(fetchByNameAction(response[0]));
-        setResult(response[0]);
-      } catch (err: any) {
-        setError(err?.message);
-      }
-      setLoading(false);
-    };
-    if (code && !mapCountries[code]?.isComplete) {
+    if (code && !countryMap[code]?.isComplete) {
       fetchCountriesByCode([code]);
     } else {
-      setResult(mapCountries[code]);
-      setLoading(false);
+      setResult(countryMap[code]);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [code, dispatch]);
+  }, [code, countryMap, fetchCountriesByCode]);
+
+  useEffect(() => {
+    if (useCountryResult) {
+      setResult(useCountryResult as CountryDetails);
+    }
+  }, [useCountryResult]);
 
   const details =
     useMemo(() => {
