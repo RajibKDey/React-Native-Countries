@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {
   View,
   Text,
@@ -187,30 +187,33 @@ const CountryDetail = ({route, navigation}: {route: any; navigation: any}) => {
       }
     }, [result]) || [];
 
-  const renderItem = ({item, index}: {item: string; index: number}) => {
-    const countryName = (alphaCca3Map as Record<string, any>)[item].Country;
-    const cca2 = (alphaCca3Map as Record<string, any>)[item].cca2;
-    return (
-      <Shadow
-        key={`${item}${index}`}
-        distance={8}
-        startColor={'#00000010'}
-        containerStyle={styles.shadowContainer}>
-        <TouchableOpacity
-          onPress={() => {
-            navigation.navigate('Country-Details', {
-              code: cca2,
-            });
-          }}>
-          <View style={styles.borderCountry}>
-            <Text>{countryName}</Text>
-          </View>
-        </TouchableOpacity>
-      </Shadow>
-    );
-  };
+  const renderItem = useCallback(
+    ({item, index}: {item: string; index: number}) => {
+      const countryName = (alphaCca3Map as Record<string, any>)[item].Country;
+      const cca2 = (alphaCca3Map as Record<string, any>)[item].cca2;
+      return (
+        <Shadow
+          key={`${item}${index}`}
+          distance={8}
+          startColor={'#00000010'}
+          containerStyle={styles.shadowContainer}>
+          <TouchableOpacity
+            onPress={() => {
+              navigation.navigate('Country-Details', {
+                code: cca2,
+              });
+            }}>
+            <View style={styles.borderCountry}>
+              <Text>{countryName}</Text>
+            </View>
+          </TouchableOpacity>
+        </Shadow>
+      );
+    },
+    [navigation],
+  );
 
-  const renderBackfill = () => {
+  const renderBackfill = useCallback(() => {
     if (!loading && !error) {
       return null;
     }
@@ -218,7 +221,7 @@ const CountryDetail = ({route, navigation}: {route: any; navigation: any}) => {
       return <Backfill text={error} fill />;
     }
     return <Backfill fill loading />;
-  };
+  }, [error, loading]);
 
   return loading || !!error ? (
     renderBackfill()

@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   StyleSheet,
   View,
@@ -73,11 +73,11 @@ const Home = ({navigation}: {navigation: any}) => {
   }, [dispatch]);
 
   useEffect(() => {
-    const fetchCountriesByRegion = async (region: string) => {
+    const fetchCountriesByRegion = async (reg: string) => {
       setLoading(true);
       setError('');
       try {
-        const response = await fetchByRegion(region);
+        const response = await fetchByRegion(reg);
         setResult(response);
       } catch (err: any) {
         setError(err.message);
@@ -108,22 +108,25 @@ const Home = ({navigation}: {navigation: any}) => {
     }
   }, [debouncedValue]);
 
-  const renderItem = ({item, index}: {item: CountryDetails; index: number}) => {
-    return (
-      <TouchableOpacity
-        key={`${item.cca2}${index}`}
-        activeOpacity={StyleVars.TOUCH_OPACITY}
-        onPress={() => {
-          navigation.navigate('Country-Details', {
-            code: item.cca2,
-          });
-        }}>
-        <CountryDetail key={`${item.cca3}${index}`} country={item} />
-      </TouchableOpacity>
-    );
-  };
+  const renderItem = useCallback(
+    ({item, index}: {item: CountryDetails; index: number}) => {
+      return (
+        <TouchableOpacity
+          key={`${item.cca2}${index}`}
+          activeOpacity={StyleVars.TOUCH_OPACITY}
+          onPress={() => {
+            navigation.navigate('Country-Details', {
+              code: item.cca2,
+            });
+          }}>
+          <CountryDetail key={`${item.cca3}${index}`} country={item} />
+        </TouchableOpacity>
+      );
+    },
+    [navigation],
+  );
 
-  const renderBackfill = () => {
+  const renderBackfill = useCallback(() => {
     if (!loading && !error) {
       return null;
     }
@@ -131,7 +134,7 @@ const Home = ({navigation}: {navigation: any}) => {
       return <Backfill text={error} fill />;
     }
     return <Backfill fill loading />;
-  };
+  }, [error, loading]);
 
   return !result && (loading || !!error) ? (
     renderBackfill()
