@@ -1,7 +1,7 @@
 # React-Native-Countries
 Allows user to check details of various countries
 
-Go over the documtation mentioned under https://reactnative.dev/docs/environment-setup to set up your environment.
+Go over the documentation mentioned under https://reactnative.dev/docs/environment-setup to set up your environment.
 
 To run the application cd into the directory and install all the modules that are necessary.
 Use 'yarn' to add all the node modules with Yarn. If you are using NPM use 'npm install' to install all the node modules.
